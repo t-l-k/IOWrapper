@@ -31,7 +31,7 @@ namespace Tests.SubscriptionHandler.Helpers
             CallbackResults = new Dictionary<Guid, CallbackResult>();
         }
 
-        private void CallbackHandler(InputSubscriptionRequest sr, short value)
+        private void CallbackHandler(InputSubscriptionRequest sr, ulong sequence, short value)
         {
             CallbackResults.Add(sr.SubscriptionDescriptor.SubscriberGuid, new CallbackResult { SubReq = sr, Value = value });
         }
@@ -55,7 +55,7 @@ namespace Tests.SubscriptionHandler.Helpers
                 {
                     //CallbackResults.Add(sr.Name , new CallbackResult {BindingDescriptor = sr.BindingDescriptor, Value = value});
                 })
-                
+
             };
             return subReq;
         }

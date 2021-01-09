@@ -11,10 +11,20 @@ namespace Hidwizards.IOWrapper.Libraries.SubscriptionHandlers
             EmptyEventDictionary<int, EmptyEventDictionary<int, SubscriptionProcessor, BindingDescriptor>, BindingDescriptor>,
             DeviceDescriptor> _bindings;
         private readonly SubscriptionProcessor.CallbackHandler _callbackHandler;
+        private readonly SubscriptionProcessor.SequencedCallbackHandler _sequencedCallbackHandler;
 
         public SubscriptionHandler(DeviceDescriptor deviceDescriptor, EventHandler<DeviceDescriptor> deviceEmptyHandler, SubscriptionProcessor.CallbackHandler callbackHandler)
         {
             _callbackHandler = callbackHandler;
+            _bindings =
+                new EmptyEventDictionary<BindingType,
+                    EmptyEventDictionary<int, EmptyEventDictionary<int, SubscriptionProcessor, BindingDescriptor>,
+                        BindingDescriptor>, DeviceDescriptor>(deviceDescriptor, deviceEmptyHandler);
+        }
+
+        public SubscriptionHandler(DeviceDescriptor deviceDescriptor, EventHandler<DeviceDescriptor> deviceEmptyHandler, SubscriptionProcessor.SequencedCallbackHandler sequencedCallbackHandler)
+        {
+            _sequencedCallbackHandler = sequencedCallbackHandler;
             _bindings =
                 new EmptyEventDictionary<BindingType,
                     EmptyEventDictionary<int, EmptyEventDictionary<int, SubscriptionProcessor, BindingDescriptor>,
@@ -28,15 +38,25 @@ namespace Hidwizards.IOWrapper.Libraries.SubscriptionHandlers
         /// <param name="subReq">The Subscription Request object holding details of the subscription</param>
         public void Subscribe(InputSubscriptionRequest subReq)
         {
-            _bindings.GetOrAdd(subReq.BindingDescriptor.Type,
+            var binding = _bindings.GetOrAdd(subReq.BindingDescriptor.Type,
                     new EmptyEventDictionary<int, EmptyEventDictionary<int, SubscriptionProcessor, BindingDescriptor>,
                         BindingDescriptor>(subReq.BindingDescriptor, BindingTypeEmptyHandler))
                 .GetOrAdd(subReq.BindingDescriptor.Index,
                     new EmptyEventDictionary<int, SubscriptionProcessor, BindingDescriptor>(subReq.BindingDescriptor,
-                        IndexEmptyHandler))
-                .GetOrAdd(subReq.BindingDescriptor.SubIndex,
+                        IndexEmptyHandler)); 
+
+            if (_callbackHandler != null)
+            {
+                binding.GetOrAdd(subReq.BindingDescriptor.SubIndex,
                     new SubscriptionProcessor(subReq.BindingDescriptor, SubIndexEmptyHandler, _callbackHandler))
-                .TryAdd(subReq.SubscriptionDescriptor.SubscriberGuid, subReq);
+                    .TryAdd(subReq.SubscriptionDescriptor.SubscriberGuid, subReq);
+            }
+            else if (_sequencedCallbackHandler != null)
+            {
+                binding.GetOrAdd(subReq.BindingDescriptor.SubIndex,
+                    new SubscriptionProcessor(subReq.BindingDescriptor, SubIndexEmptyHandler, _sequencedCallbackHandler))
+                    .TryAdd(subReq.SubscriptionDescriptor.SubscriberGuid, subReq);
+            }
         }
 
         /// <summary>

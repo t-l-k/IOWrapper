@@ -40,12 +40,12 @@ namespace Hidwizards.IOWrapper.Libraries.DeviceHandlers.Devices
             BindModeUpdate = bindModeHandler;
             DeviceDescriptor = deviceDescriptor;
             _deviceEmptyHandler = deviceEmptyHandler;
-            SubHandler = new SubscriptionHandler(deviceDescriptor, OnDeviceEmpty, CallbackHandler);
+            SubHandler = new SubscriptionHandler(deviceDescriptor, OnDeviceEmpty, SequencedCallbackHandler);
         }
 
-        private void CallbackHandler(InputSubscriptionRequest subreq, short value)
+        private void SequencedCallbackHandler(InputSubscriptionRequest subreq, ulong sequence, short value)
         {
-            Task.Factory.StartNew(() => subreq.Callback(value));
+            Task.Factory.StartNew(() => subreq.SequencedCallback(sequence, value));
             //ThreadPool.QueueUserWorkItem( cb => callback(value));
             //callback(value);
         }
@@ -112,7 +112,7 @@ namespace Hidwizards.IOWrapper.Libraries.DeviceHandlers.Devices
 
         public virtual void Init()
         {
-            
+
         }
 
         /// <inheritdoc />

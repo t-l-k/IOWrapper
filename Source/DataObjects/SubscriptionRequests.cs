@@ -53,6 +53,11 @@ namespace HidWizards.IOWrapper.DataTransferObjects
         // Disabled, as enabling this breaks a bunch of stuff in UCR
         public Action<short> Callback { get; set; }
 
+        /// <summary>
+        /// Callback to be fired when this Input changes state in volatile threaded contexts
+        /// </summary>
+        public Action<ulong, short> SequencedCallback { get; set; }
+
         public InputSubscriptionRequest Clone()
         {
             return (InputSubscriptionRequest)MemberwiseClone();
@@ -62,7 +67,7 @@ namespace HidWizards.IOWrapper.DataTransferObjects
     /// <summary>
     /// Contains all the information for:
     ///     The IOController to route the request to the appropriate Provider
-    ///     
+    ///
     /// Output Subscriptions are typically used to eg create virtual devices...
     /// ... so that output can be sent to them
     /// </summary>
